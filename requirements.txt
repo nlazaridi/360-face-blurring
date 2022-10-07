@@ -5,3 +5,9 @@ loguru~=0.6.0
 pre-commit~=2.20.0
 slack-sdk~=3.19.1
 uvicorn~=0.17.6
+
+# face blurring
+httpx~=0.23.0
+onnxruntime-gpu~=1.12.1
+opencv-python~=4.6.0.66
+pillow~=9.2.0

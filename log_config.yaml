@@ -7,12 +7,12 @@ formatters:
 handlers:
   filelogger:
     class: logging.FileHandler
-    level: INFO
+    level: DEBUG
     formatter: simple
     filename: log
   console:
     class: logging.StreamHandler
-    level: INFO
+    level: DEBUG
     formatter: simple
     stream: ext://sys.stdout
   slack:
@@ -21,7 +21,7 @@ handlers:
     formatter: simple
   augmented_filelogger:
     class: logging.FileHandler
-    level: INFO
+    level: DEBUG
     formatter: augmented
     filename: log
   augmented_slack:
@@ -30,7 +30,7 @@ handlers:
     formatter: augmented
   augmented_console:
     class: logging.StreamHandler
-    level: INFO
+    level: DEBUG
     formatter: augmented
     stream: ext://sys.stdout
 filters:

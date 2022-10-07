@@ -9,6 +9,12 @@ worker_class = "custom_uvicorn_worker.CustomUvicornWorker"
 file = "log"
 level = "INFO"
 
+[model]
+detection_size = [2560, 1280]
+detection_threshold = 0.5
+file = "det_10g.onnx"
+gpu = false
+
 [slack]
 token = ""
 channel_id = ""
