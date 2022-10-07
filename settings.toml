@@ -1,0 +1,10 @@
+[log]
+file = "log"
+level = "INFO"
+
+[slack]
+token = ""
+channel_id = ""
+
+[uvicorn]
+timeout_keep_alive = 120

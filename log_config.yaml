@@ -1,0 +1,59 @@
+version: 1
+formatters:
+  simple:
+    format: "%(asctime)s | %(levelname)s | %(name)s:%(funcName)s:%(lineno)d | %(message)s"
+  augmented:
+    format: "%(asctime)s | %(levelname)s | %(pathname)s:%(funcName)s:%(lineno)d | %(peer)s | %(urlpath)s | %(query)s | %(message)s"
+handlers:
+  filelogger:
+    class: logging.FileHandler
+    level: INFO
+    formatter: simple
+    filename: log
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple
+    stream: ext://sys.stdout
+  slack:
+    (): face_blurring.custom_logging.SlackHandler
+    level: ERROR
+    formatter: simple
+  augmented_filelogger:
+    class: logging.FileHandler
+    level: INFO
+    formatter: augmented
+    filename: log
+  augmented_slack:
+    (): face_blurring.custom_logging.SlackHandler
+    level: ERROR
+    formatter: augmented
+  augmented_console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: augmented
+    stream: ext://sys.stdout
+filters:
+  inject_request:
+    (): face_blurring.custom_logging.InjectingFilter
+loggers:
+  face_blurring:
+    level: INFO
+  gunicorn:
+    level: INFO
+    handlers: [filelogger, console, slack]
+    propagate: no
+  uvicorn:
+    level: INFO
+    handlers: [filelogger, console, slack]
+    propagate: no
+  augmented:
+    level: INFO
+    filters: [inject_request]
+    handlers: [augmented_filelogger, augmented_console, augmented_slack]
+    propagate: no
+root:
+  level: INFO
+  handlers: [filelogger, console, slack]
+  filters: [inject_request]
+disable_existing_loggers: false

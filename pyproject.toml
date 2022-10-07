@@ -1,0 +1,20 @@
+[tool.isort]
+profile = "black"
+
+[tool.pycln]
+all = true
+
+[tool.pylint.master]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring", 
+    "logging-fstring-interpolation", 
+    "invalid-name"
+]
+
+[tool.pylint.typecheck]
+generated-members="numpy.*,torch.*,cv2.*,nd.*,tensorflow.*"
+
+[tool.pylint.format]
+good-names="i,j,k,ex,Run,_,x,y,z,e"
