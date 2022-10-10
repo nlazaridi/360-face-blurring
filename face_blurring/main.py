@@ -60,9 +60,13 @@ async def logging_middleware(request: Request, call_next):
 def initialize_model():
     simple_logger.info("Initializing model")
     onnxruntime.set_default_logger_severity(3)
+    if GPU:
+        onnx_providers = ["CUDAExecutionProvider"]
+    else:
+        onnx_providers = ["CPUExecutionProvider"]
     onnx_session = onnxruntime.InferenceSession(
         MODEL_FILE,
-        providers=["CUDAExecutionProvider"],
+        providers=onnx_providers,
         provider_options=None,
     )
     app.state.model = SCRFD(MODEL_FILE, onnx_session)
