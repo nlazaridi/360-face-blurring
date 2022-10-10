@@ -4,7 +4,7 @@ import tempfile
 
 import cv2
 import numpy as np
-from fastapi import Request
+from fastapi import Depends, Request
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 from PIL import Image, ImageDraw, ImageFilter
@@ -17,11 +17,31 @@ augmented_logger = logging.getLogger("augmented")
 router = APIRouter()
 
 
+async def get_body(request: Request):
+    return await request.body()
+
+
 @router.get("/video_face_blurring")
-def video_face_blurring(request: Request, url: str):
+def get_video_face_blurring(request: Request, url: str):
     augmented_logger.debug(f"Dowloading video from {url}")
     video = download_video(url)
     augmented_logger.debug(f"Downloaded {len(video)} bytes from {url}")
+    with tempfile.NamedTemporaryFile() as temp:
+        augmented_logger.debug(f"Saving video to {temp.name}")
+        temp.write(video)
+        temp.seek(0)
+        augmented_logger.debug("Blurring video")
+        try:
+            blurred_video = blur_video(request.app.state.model, temp.name)
+        except Exception as e:
+            raise FaceBlurringError("An error occured while blurring the video") from e
+        augmented_logger.debug("Finished blurring video")
+
+    return StreamingResponse(io.BytesIO(blurred_video), media_type="video/mp4")
+
+
+@router.post("/video_face_blurring")
+def post_video_face_blurring(request: Request, video: bytes = Depends(get_body)):
     with tempfile.NamedTemporaryFile() as temp:
         augmented_logger.debug(f"Saving video to {temp.name}")
         temp.write(video)
