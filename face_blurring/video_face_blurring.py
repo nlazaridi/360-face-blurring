@@ -34,7 +34,6 @@ def video_face_blurring(request: Request, url: str):
         augmented_logger.debug("Finished blurring video")
 
     return StreamingResponse(io.BytesIO(blurred_video), media_type="video/mp4")
-    # return {"video": "ok"}
 
 
 def blur_video(model, video_path) -> bytes:
