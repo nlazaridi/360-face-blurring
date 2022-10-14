@@ -86,20 +86,25 @@ def blur_video(model, video_path) -> bytes:
             bboxes["frame_" + str(i + 1)] = boxes
 
             # Draw faces
-            frame_draw = frame.copy()
+         
+            if len(boxes) > 0:
+                frame_draw = frame.copy()
+                if blur:
+                    mask = Image.new("L", frame_draw.size, 0)
+                    draw = ImageDraw.Draw(mask)
+                else:
+                    draw = ImageDraw.Draw(frame_draw)
 
-            mask = Image.new("L", frame_draw.size, 0)
-            draw = ImageDraw.Draw(mask)
-
-            if boxes is not None:
                 for box in boxes:
                     draw.ellipse(box, fill=255)
 
-            blurred = frame_draw.filter(ImageFilter.GaussianBlur(52))
-            frame_draw.paste(blurred, mask=mask)
-
-            video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
-
+                if blur:
+                    blurred = frame_draw.filter(ImageFilter.GaussianBlur(52))
+                    frame_draw.paste(blurred, mask=mask)
+                video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
+            else:
+                video_tracked.write(cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR))
+            
             success, image = videocap.read()
 
         video_tracked.release()
