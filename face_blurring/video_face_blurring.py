@@ -70,16 +70,21 @@ def blur_video(model, video_path) -> bytes:
         video_tracked = cv2.VideoWriter(
             temp.name, fourcc, fps, (image.shape[1], image.shape[0])
         )
+        
+        inf_next = 0
+        
         while success:
             count = count + 1
             frame = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             img = np.array(frame)
 
-            faces = model_inf(model, img)
-
-            boxes = []
-            for f in range(len(faces)):
-                boxes.append(faces[f].tolist())
+            if inf_next == 0:
+                faces = model_inf(model, img)
+                boxes = []
+                for f in range(len(faces)):
+                    boxes.append(faces[f].tolist())
+                if len(boxes)>0:
+                    inf_next = 5
 
             # append the dictionary with the bboxes
             i = i + 1
@@ -89,19 +94,33 @@ def blur_video(model, video_path) -> bytes:
 
             if len(boxes) > 0:
                 frame_draw = frame.copy()
+                if inf_next > 0 and inf_next < 5 :
+                    frame_draw.paste(blurred, mask=mask)
+                    video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
+                    inf_next = inf_next - 1
+                    success, image = videocap.read()
+                    continue
+
+
+                
                 mask = Image.new("L", frame_draw.size, 0)
                 draw = ImageDraw.Draw(mask)
-
+             
                 for box in boxes:
                     draw.ellipse(box, fill=255)
 
+                
                 blurred = frame_draw.filter(ImageFilter.GaussianBlur(52))
                 frame_draw.paste(blurred, mask=mask)
-                video_tracked.write(
-                    cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR)
-                )
+                video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
+                
+               
             else:
                 video_tracked.write(cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR))
+                
+            if inf_next>=1:
+                inf_next = inf_next-1
+               
 
             success, image = videocap.read()
 

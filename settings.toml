@@ -10,7 +10,7 @@ file = "log"
 level = "INFO"
 
 [model]
-detection_size = [2560, 1280]
+detection_size = [1280, 640]
 detection_threshold = 0.5
 file = "det_10g.onnx"
 gpu = false
