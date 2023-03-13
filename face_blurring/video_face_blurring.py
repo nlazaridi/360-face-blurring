@@ -8,6 +8,7 @@ from fastapi import Depends, Request
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 from PIL import Image, ImageDraw, ImageFilter
+import subprocess
 
 from .download import download_video
 from .errors import FaceBlurringError
@@ -71,61 +72,47 @@ def blur_video(model, video_path) -> bytes:
             temp.name, fourcc, fps, (image.shape[1], image.shape[0])
         )
         
-        inf_next = 0
         
         while success:
             count = count + 1
             frame = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             img = np.array(frame)
 
-            if inf_next == 0:
-                faces = model_inf(model, img)
-                boxes = []
-                for f in range(len(faces)):
-                    boxes.append(faces[f].tolist())
-                if len(boxes)>0:
-                    inf_next = 5
+            faces = model_inf(model, img)
+            boxes = []
+
+            for f in range(len(faces)):
+                boxes.append(faces[f].tolist())
+                
 
             # append the dictionary with the bboxes
             i = i + 1
             bboxes["frame_" + str(i + 1)] = boxes
 
             # Draw faces
-
-            if len(boxes) > 0:
-                frame_draw = frame.copy()
-                if inf_next > 0 and inf_next < 5 :
-                    frame_draw.paste(blurred, mask=mask)
-                    video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
-                    inf_next = inf_next - 1
-                    success, image = videocap.read()
-                    continue
-
+            frame_draw = frame.copy()
 
                 
-                mask = Image.new("L", frame_draw.size, 0)
-                draw = ImageDraw.Draw(mask)
-             
+            mask = Image.new("L", frame_draw.size, 0)
+            draw = ImageDraw.Draw(mask)
+            
+            if boxes is not None: 
                 for box in boxes:
                     draw.ellipse(box, fill=255)
 
                 
-                blurred = frame_draw.filter(ImageFilter.GaussianBlur(52))
-                frame_draw.paste(blurred, mask=mask)
-                video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
+            blurred = frame_draw.filter(ImageFilter.BoxBlur(100))
+            frame_draw.paste(blurred, mask=mask)
+            video_tracked.write(cv2.cvtColor(np.array(frame_draw), cv2.COLOR_RGB2BGR))
                 
-               
-            else:
-                video_tracked.write(cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR))
-                
-            if inf_next>=1:
-                inf_next = inf_next-1
-               
-
             success, image = videocap.read()
 
         video_tracked.release()
-
+        
+        #export and merge audio
+        subprocess.run(['ffmpeg', '-y', '-i', join(file_path, filename + suffix), '-vn', '-acodec', 'copy', 'temp_audio.aac'])
+        subprocess.run(['ffmpeg', '-y','-i', save_dir, '-i', 'temp_audio.aac', '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-shortest', save_dir])
+    
         temp.seek(0)
         return temp.read()
 
