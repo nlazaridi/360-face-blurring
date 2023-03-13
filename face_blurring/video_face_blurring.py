@@ -108,7 +108,11 @@ def blur_video(model, video_path) -> bytes:
             success, image = videocap.read()
 
         video_tracked.release()
-
+        
+        #export and merge audio
+        subprocess.run(['ffmpeg', '-y', '-i', join(file_path, filename + suffix), '-vn', '-acodec', 'copy', 'temp_audio.aac'])
+        subprocess.run(['ffmpeg', '-y','-i', save_dir, '-i', 'temp_audio.aac', '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-shortest', save_dir])
+    
         temp.seek(0)
         return temp.read()
 
